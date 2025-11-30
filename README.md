@@ -3,7 +3,7 @@ This is an API that connects events in the ds with the site page and filtering b
 
 Sections 
 ---
-  * #air 
+  * #irl 
   * #virtual 
   * #radio
   * #"random names" to other
