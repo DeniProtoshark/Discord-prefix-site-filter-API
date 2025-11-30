@@ -1,0 +1,730 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title>Мероприятия сервера</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      --bg: #050716;
+      --bg-card: #101322;
+      --bg-card-hover: #171b2c;
+      --accent: #4f8cff;
+      --accent-soft: rgba(79, 140, 255, 0.15);
+      --text: #ffffff;
+      --text-soft: #a4abc4;
+      --border: #262a3e;
+      --danger: #ff5c7a;
+      --success: #3fdc8a;
+      --warning: #ffd66b;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+        sans-serif;
+      background: radial-gradient(circle at top, #0c1230 0, #050716 55%, #02030a 100%);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    .page {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 32px 16px 56px;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 32px;
+      letter-spacing: 0.04em;
+    }
+
+    .subtitle {
+      margin: 0;
+      font-size: 14px;
+      color: var(--text-soft);
+    }
+
+    .top-row {
+      margin-top: 20px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .tab {
+      border: none;
+      padding: 8px 18px;
+      border-radius: 999px;
+      background: transparent;
+      color: var(--text-soft);
+      font-size: 14px;
+      cursor: pointer;
+      transition: 0.15s;
+    }
+
+    .tab.active {
+      background: var(--accent-soft);
+      color: var(--accent);
+    }
+
+    .timezone {
+      font-size: 12px;
+      color: var(--text-soft);
+      opacity: 0.9;
+    }
+
+    .loader,
+    .empty {
+      margin-top: 32px;
+      text-align: center;
+      font-size: 14px;
+      color: var(--text-soft);
+    }
+
+    .grid {
+      margin-top: 24px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 16px;
+    }
+
+    .card {
+      background: var(--bg-card);
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      min-height: 220px;
+      transition: 0.12s transform, 0.12s box-shadow, 0.12s background;
+    }
+
+    .card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(5, 8, 26, 0.7);
+      background: var(--bg-card-hover);
+    }
+
+    .card-image {
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      object-fit: cover;
+      display: block;
+      background: radial-gradient(circle at top, #151936, #050716);
+    }
+
+    .card-body {
+      padding: 10px 12px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .card-title {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .card-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      font-size: 11px;
+      color: var(--text-soft);
+      align-items: center;
+    }
+
+    .pill {
+      padding: 2px 7px;
+      border-radius: 999px;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .pill-irl {
+      background: rgba(255, 219, 128, 0.12);
+      color: #ffd980;
+    }
+
+    .pill-virtual {
+      background: rgba(160, 200, 255, 0.12);
+      color: #a0c8ff;
+    }
+
+    .pill-radio {
+      background: rgba(255, 160, 200, 0.12);
+      color: #ffb0d0;
+    }
+
+    .pill-other {
+      background: rgba(180, 180, 180, 0.12);
+      color: #e0e0e0;
+    }
+
+    .status {
+      font-weight: 600;
+    }
+
+    .status-live {
+      color: var(--success);
+    }
+
+    .status-upcoming {
+      color: var(--warning);
+    }
+
+    .status-past {
+      color: #777b91;
+    }
+
+    .datetime {
+      font-size: 13px;
+      color: #e2e6ff;
+    }
+
+    .countdown {
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .countdown-live {
+      color: var(--success);
+    }
+
+    .countdown-upcoming {
+      color: var(--warning);
+    }
+
+    .countdown-past {
+      color: #777b91;
+    }
+
+    .description {
+      font-size: 13px;
+      color: var(--text-soft);
+      max-height: 3.5em;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 4px;
+    }
+
+    .link-badge {
+      font-size: 11px;
+      padding: 3px 7px;
+      border-radius: 999px;
+      background: rgba(29, 33, 61, 0.9);
+      color: #d6ddff;
+      text-decoration: none;
+    }
+
+    .card-footer {
+      padding: 8px 12px 10px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 12px;
+    }
+
+    .stats {
+      display: flex;
+      gap: 10px;
+      color: var(--text-soft);
+    }
+
+    .stat {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .actions {
+      display: flex;
+      gap: 6px;
+    }
+
+    .btn {
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: rgba(9, 13, 30, 0.9);
+      color: var(--text);
+      font-size: 11px;
+      padding: 4px 10px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: 0.12s background, 0.12s border-color;
+    }
+
+    .btn:hover {
+      background: rgba(22, 31, 66, 0.95);
+      border-color: rgba(255, 255, 255, 0.22);
+    }
+
+    .btn-ghost {
+      background: transparent;
+    }
+
+    @media (max-width: 640px) {
+      .page {
+        padding: 20px 12px 40px;
+      }
+
+      h1 {
+        font-size: 26px;
+      }
+
+      .top-row {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .tabs {
+        justify-content: flex-start;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header>
+      <h1>Мероприятия сервера</h1>
+      <p class="subtitle">
+        Анонсы из Discord Scheduled Events. Время уже переведено в ваш часовой пояс.
+      </p>
+
+      <div class="top-row">
+        <div class="tabs" id="tabs">
+          <button class="tab active" data-type="">Все</button>
+          <button class="tab" data-type="irl">IRL</button>
+          <button class="tab" data-type="virtual">VR</button>
+          <button class="tab" data-type="radio">Radio</button>
+          <button class="tab" data-type="other">Другое</button>
+        </div>
+        <div class="timezone" id="tz-info"></div>
+      </div>
+    </header>
+
+    <div id="loader" class="loader">Загружаем мероприятия…</div>
+    <div id="grid" class="grid" style="display: none;"></div>
+    <div id="empty" class="empty" style="display: none;">
+      Для этой категории пока нет мероприятий.
+    </div>
+  </div>
+
+  <script>
+    const gridEl = document.getElementById("grid");
+    const loaderEl = document.getElementById("loader");
+    const emptyEl = document.getElementById("empty");
+    const tabsEl = document.getElementById("tabs");
+    const tzInfoEl = document.getElementById("tz-info");
+
+    let currentType = "";
+    let countdownEntries = [];
+    let countdownTimerId = null;
+
+    initTimezoneInfo();
+    setupTabs();
+    loadEvents();
+
+    function initTimezoneInfo() {
+      const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "локальный часовой пояс";
+      const offsetMinutes = -new Date().getTimezoneOffset();
+      const sign = offsetMinutes >= 0 ? "+" : "-";
+      const absMin = Math.abs(offsetMinutes);
+      const hours = String(Math.floor(absMin / 60)).padStart(2, "0");
+      const mins = String(absMin % 60).padStart(2, "0");
+      const offsetStr = `UTC${sign}${hours}:${mins}`;
+
+      tzInfoEl.textContent = `Ваш часовой пояс: ${tz} (${offsetStr})`;
+    }
+
+    function setupTabs() {
+      tabsEl.addEventListener("click", (e) => {
+        const btn = e.target.closest(".tab");
+        if (!btn) return;
+
+        const type = btn.dataset.type || "";
+        if (type === currentType) return;
+
+        currentType = type;
+
+        document
+          .querySelectorAll(".tab")
+          .forEach((t) => t.classList.toggle("active", t === btn));
+
+        loadEvents();
+      });
+    }
+
+    async function loadEvents() {
+      loaderEl.style.display = "block";
+      gridEl.style.display = "none";
+      emptyEl.style.display = "none";
+      gridEl.innerHTML = "";
+
+      countdownEntries = [];
+      if (countdownTimerId !== null) {
+        clearInterval(countdownTimerId);
+        countdownTimerId = null;
+      }
+
+      const params = new URLSearchParams();
+      if (currentType) params.set("type", currentType);
+      params.set("sort", "start_asc");
+
+      const url = `/api/events?${params.toString()}`;
+
+      try {
+        const res = await fetch(url);
+        if (!res.ok) throw new Error("HTTP " + res.status);
+
+        const events = await res.json();
+
+        loaderEl.style.display = "none";
+
+        if (!Array.isArray(events) || events.length === 0) {
+          emptyEl.style.display = "block";
+          return;
+        }
+
+        events.forEach((ev) => {
+          const card = createCard(ev);
+          gridEl.appendChild(card);
+        });
+
+        gridEl.style.display = "grid";
+
+        countdownTimerId = setInterval(updateAllCountdowns, 1000);
+        updateAllCountdowns();
+      } catch (err) {
+        console.error(err);
+        loaderEl.textContent = "Ошибка загрузки мероприятий.";
+      }
+    }
+
+    function createCard(ev) {
+      const card = document.createElement("article");
+      card.className = "card";
+
+      if (ev.image) {
+        const img = document.createElement("img");
+        img.className = "card-image";
+        img.src = ev.image;
+        img.alt = ev.name || "";
+        card.appendChild(img);
+      }
+
+      const body = document.createElement("div");
+      body.className = "card-body";
+
+      const title = document.createElement("h2");
+      title.className = "card-title";
+      title.textContent = ev.name || "Без названия";
+      body.appendChild(title);
+
+      const meta = document.createElement("div");
+      meta.className = "card-meta";
+
+      const typeSpan = document.createElement("span");
+      typeSpan.className = "pill " + typeClass(ev.type);
+      typeSpan.textContent = typeLabel(ev.type);
+      meta.appendChild(typeSpan);
+
+      const statusSpan = document.createElement("span");
+      statusSpan.className = "status " + statusClass(ev.status?.code);
+      statusSpan.textContent = statusLabel(ev.status?.code);
+      meta.appendChild(statusSpan);
+
+      if (ev.location) {
+        const locSpan = document.createElement("span");
+        locSpan.textContent = "• " + ev.location;
+        meta.appendChild(locSpan);
+      }
+
+      body.appendChild(meta);
+
+      // Дата / время в локальной TZ
+      const dtDiv = document.createElement("div");
+      dtDiv.className = "datetime";
+
+      if (ev.start) {
+        const start = new Date(ev.start);
+        const end = ev.end ? new Date(ev.end) : null;
+
+        const startStr = start.toLocaleString(undefined, {
+          dateStyle: "medium",
+          timeStyle: "short",
+        });
+
+        let text = "Начало: " + startStr;
+        if (end) {
+          const endStr = end.toLocaleTimeString(undefined, { timeStyle: "short" });
+          text += " — окончание: " + endStr;
+        }
+
+        dtDiv.textContent = text;
+      } else {
+        dtDiv.textContent = "Время будет объявлено";
+      }
+
+      body.appendChild(dtDiv);
+
+      // Динамический таймер
+      const countdown = document.createElement("div");
+      countdown.className = "countdown " + countdownClass(ev.status?.code);
+      countdown.textContent = "";
+      body.appendChild(countdown);
+
+      if (ev.start) {
+        countdownEntries.push({
+          el: countdown,
+          start: new Date(ev.start).getTime(),
+          end: ev.end ? new Date(ev.end).getTime() : null,
+        });
+      }
+
+      if (ev.description) {
+        const desc = document.createElement("p");
+        desc.className = "description";
+        desc.textContent = ev.description.replace(/\s+/g, " ").trim();
+        body.appendChild(desc);
+      }
+
+      if (Array.isArray(ev.tags) && ev.tags.length > 0) {
+        const tagsDiv = document.createElement("div");
+        tagsDiv.className = "links";
+        ev.tags.forEach((tag) => {
+          const span = document.createElement("span");
+          span.className = "link-badge";
+          span.textContent = "#" + tag;
+          tagsDiv.appendChild(span);
+        });
+        body.appendChild(tagsDiv);
+      }
+
+      if (Array.isArray(ev.links) && ev.links.length > 0) {
+        const linksDiv = document.createElement("div");
+        linksDiv.className = "links";
+        ev.links.forEach((lnk) => {
+          const a = document.createElement("a");
+          a.className = "link-badge";
+          a.href = lnk.url;
+          a.target = "_blank";
+          a.rel = "noopener noreferrer";
+          a.textContent = lnk.label || "Link";
+          linksDiv.appendChild(a);
+        });
+        body.appendChild(linksDiv);
+      }
+
+      card.appendChild(body);
+
+      // футер со статами
+      const footer = document.createElement("div");
+      footer.className = "card-footer";
+
+      const statsBox = document.createElement("div");
+      statsBox.className = "stats";
+
+      const goingStat = document.createElement("div");
+      goingStat.className = "stat";
+      goingStat.innerHTML = `👤 <span>${ev.stats?.going || 0}</span>`;
+      statsBox.appendChild(goingStat);
+
+      const interestedStat = document.createElement("div");
+      interestedStat.className = "stat";
+      interestedStat.innerHTML = `⭐ <span>${ev.stats?.interested || 0}</span>`;
+      statsBox.appendChild(interestedStat);
+
+      footer.appendChild(statsBox);
+
+      const actions = document.createElement("div");
+      actions.className = "actions";
+
+      const btnGoing = document.createElement("button");
+      btnGoing.className = "btn";
+      btnGoing.textContent = "Я пойду";
+      btnGoing.addEventListener("click", () => {
+        sendInterest(ev.id, "going", goingStat);
+      });
+
+      const btnInterested = document.createElement("button");
+      btnInterested.className = "btn btn-ghost";
+      btnInterested.textContent = "Интересно";
+      btnInterested.addEventListener("click", () => {
+        sendInterest(ev.id, "interested", interestedStat);
+      });
+
+      actions.appendChild(btnGoing);
+      actions.appendChild(btnInterested);
+
+      footer.appendChild(actions);
+      card.appendChild(footer);
+
+      return card;
+    }
+
+    function typeClass(type) {
+      switch ((type || "").toLowerCase()) {
+        case "irl":
+          return "pill-irl";
+        case "virtual":
+          return "pill-virtual";
+        case "radio":
+          return "pill-radio";
+        default:
+          return "pill-other";
+      }
+    }
+
+    function typeLabel(type) {
+      switch ((type || "").toLowerCase()) {
+        case "irl":
+          return "IRL";
+        case "virtual":
+          return "VR";
+        case "radio":
+          return "Radio";
+        default:
+          return "Другое";
+      }
+    }
+
+    function statusClass(code) {
+      switch (code) {
+        case "live":
+          return "status-live";
+        case "upcoming":
+          return "status-upcoming";
+        case "past":
+          return "status-past";
+        default:
+          return "";
+      }
+    }
+
+    function statusLabel(code) {
+      switch (code) {
+        case "live":
+          return "СЕЙЧАС ИДЁТ";
+        case "upcoming":
+          return "СКОРО";
+        case "past":
+          return "ЗАВЕРШЕНО";
+        default:
+          return "";
+      }
+    }
+
+    function countdownClass(code) {
+      switch (code) {
+        case "live":
+          return "countdown-live";
+        case "upcoming":
+          return "countdown-upcoming";
+        case "past":
+          return "countdown-past";
+        default:
+          return "";
+      }
+    }
+
+    function updateAllCountdowns() {
+      const now = Date.now();
+      countdownEntries.forEach((entry) => updateCountdown(entry, now));
+    }
+
+    function updateCountdown(entry, now) {
+      const { el, start, end } = entry;
+      if (!el) return;
+
+      if (now < start) {
+        const diff = start - now;
+        el.className = "countdown countdown-upcoming";
+        el.textContent = "Начнётся через: " + formatDiff(diff);
+      } else if (end && now >= start && now <= end) {
+        const diff = end - now;
+        el.className = "countdown countdown-live";
+        el.textContent = "Идёт сейчас · осталось: " + formatDiff(diff);
+      } else if (!end && now >= start && now - start < 6 * 3600_000) {
+        el.className = "countdown countdown-live";
+        el.textContent = "Идёт сейчас";
+      } else if (now >= start) {
+        const diff = now - start;
+        el.className = "countdown countdown-past";
+        el.textContent = "Прошло с начала: " + formatDiff(diff);
+      }
+    }
+
+    function formatDiff(ms) {
+      if (ms <= 0) return "< 1 сек";
+
+      const totalSec = Math.floor(ms / 1000);
+      const days = Math.floor(totalSec / 86400);
+      const hours = Math.floor((totalSec % 86400) / 3600);
+      const minutes = Math.floor((totalSec % 3600) / 60);
+      const seconds = totalSec % 60;
+
+      const parts = [];
+      if (days > 0) parts.push(days + " д");
+      if (hours > 0) parts.push(hours + " ч");
+      if (minutes > 0) parts.push(minutes + " мин");
+      if (seconds > 0 && days === 0) parts.push(seconds + " с");
+
+      return parts.join(" ");
+    }
+
+    async function sendInterest(eventId, action, statNode) {
+      try {
+        const res = await fetch(`/api/events/${eventId}/interest`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ action }),
+        });
+
+        if (!res.ok) throw new Error("HTTP " + res.status);
+
+        const data = await res.json();
+        const span = statNode.querySelector("span");
+        if (span) {
+          span.textContent =
+            action === "going" ? data.going ?? 0 : data.interested ?? 0;
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }
+  </script>
+</body>
+</html>
